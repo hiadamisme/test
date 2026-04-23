@@ -36,6 +36,7 @@ module.exports = (client) => {
 
       if (Array.isArray(command.aliases)) {
         for (const alias of command.aliases) {
+          if (typeof alias !== "string") continue;
           client.aliases.set(String(alias).toLowerCase(), normalizedName);
         }
       }

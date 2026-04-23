@@ -10,7 +10,7 @@ client.on("messageCreate", async message => {
   if (db.has(`afk-${message.author.id}+${message.guild.id}`)) {
     const info = db.get(`afk-${message.author.id}+${message.guild.id}`)
     await db.delete(`afk-${message.author.id}+${message.guild.id}`)
-    message.channel.send({ embed: { color: "#6495ED", description: `:wave: ${message.author}: Welcome back, you're no longer **AFK**` } });
+    message.channel.send({ embeds: [{ color: 0x6495ED, description: `:wave: ${message.author}: Welcome back, you're no longer **AFK**` }] });
   }
 
   const mentionedMember = message.mentions.members.first();

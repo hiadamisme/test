@@ -6,7 +6,7 @@ module.exports = {
   name: "help",
   aliases: ["commands"],
 
-  run: async (client, message) => {
+  run: async (client, message, args) => {
     let prefix = db.get(`prefix_${message.guild.id}`);
     if (prefix === null) prefix = default_prefix;
 
