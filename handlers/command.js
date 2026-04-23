@@ -27,12 +27,13 @@ module.exports = (client) => {
         continue;
       }
 
-      command.name = command.name.toLowerCase();
-      client.commands.set(command.name, command);
+      const normalizedName = command.name.toLowerCase();
+      if (!command.category) command.category = dir;
+      client.commands.set(normalizedName, command);
 
       if (Array.isArray(command.aliases)) {
         for (const alias of command.aliases) {
-          client.aliases.set(String(alias).toLowerCase(), command.name);
+          client.aliases.set(String(alias).toLowerCase(), normalizedName);
         }
       }
     }

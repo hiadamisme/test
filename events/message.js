@@ -20,7 +20,7 @@ client.on("messageCreate", async message => {
         .setDescription(`:zzz: ${message.mentions.members.first()} is AFK: ` + db.get(`afk-${message.mentions.members.first().id}+${message.guild.id}`))
       message.channel.send(embed)
     } else return;
-  } else;
+  }
 })
 
 client.on("messageCreate", async message => {

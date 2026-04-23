@@ -12,7 +12,7 @@ module.exports = {
 
     const categories = {};
     for (const command of client.commands.values()) {
-      const category = command.category || "other";
+      const category = command.category || "Other";
       if (!categories[category]) categories[category] = new Set();
       categories[category].add(command.name);
     }
@@ -27,9 +27,18 @@ module.exports = {
     const sortedCategories = Object.keys(categories).sort((a, b) => a.localeCompare(b));
     for (const category of sortedCategories) {
       const names = [...categories[category]].sort((a, b) => a.localeCompare(b));
+      const entries = names.map(name => `\`${name}\``);
+      const limited = [];
+      let totalLength = 0;
+      for (const entry of entries) {
+        const addition = limited.length === 0 ? entry.length : entry.length + 2;
+        if (totalLength + addition > 1024) break;
+        limited.push(entry);
+        totalLength += addition;
+      }
       embed.addFields({
         name: category,
-        value: names.map(name => `\`${name}\``).join(", ").slice(0, 1024) || "N/A"
+        value: limited.join(", ") || "N/A"
       });
     }
 

@@ -30,7 +30,11 @@ const toPermissionFlag = (permission) => {
     .split("_")
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join("");
-  return Discord.PermissionFlagsBits[pascal] || permission;
+  if (Discord.PermissionFlagsBits[pascal]) {
+    return Discord.PermissionFlagsBits[pascal];
+  }
+  console.warn(`Unknown permission flag requested: ${permission}`);
+  return permission;
 };
 
 if (!Discord.MessageEmbed && Discord.EmbedBuilder) {
@@ -96,6 +100,9 @@ patchSend(Discord.ThreadChannel?.prototype);
 const mongoose = require("mongoose");
 const mongoUri = process.env.MONGO_URI || mongo_uri;
 if (mongoUri) {
+  if (!process.env.MONGO_URI && mongo_uri) {
+    console.warn("Using mongo_uri from config.json; prefer MONGO_URI environment variable");
+  }
   mongoose.connect(mongoUri)
     .then(() => console.log("connected to mongoose"))
     .catch((error) => console.error("mongoose connection failed:", error.message));
