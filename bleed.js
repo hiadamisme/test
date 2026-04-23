@@ -1,4 +1,4 @@
-const { token, mongo_uri } = require("./config.json");
+const { token } = require("./config.json");
 const Discord = require("discord.js");
 require("@haileybot/sanitize-role-mentions")();
 
@@ -98,16 +98,13 @@ patchSend(Discord.DMChannel?.prototype);
 patchSend(Discord.ThreadChannel?.prototype);
 
 const mongoose = require("mongoose");
-const mongoUri = process.env.MONGO_URI || mongo_uri;
+const mongoUri = process.env.MONGO_URI;
 if (mongoUri) {
-  if (!process.env.MONGO_URI && mongo_uri) {
-    console.warn("Using mongo_uri from config.json; prefer MONGO_URI environment variable");
-  }
   mongoose.connect(mongoUri)
     .then(() => console.log("connected to mongoose"))
     .catch((error) => console.error("mongoose connection failed:", error.message));
 } else {
-  console.warn("mongoose connection skipped: no MONGO_URI/mongo_uri configured");
+  console.warn("mongoose connection skipped: no MONGO_URI configured");
 }
 
 const jointocreate = require("./jointocreate");

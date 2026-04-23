@@ -13,11 +13,12 @@ client.on("messageCreate", async message => {
     message.channel.send({ embed: { color: "#6495ED", description: `:wave: ${message.author}: Welcome back, you're no longer **AFK**` } });
   }
 
-  if (message.mentions.members.first()) {
-    if (db.has(`afk-${message.mentions.members.first().id}+${message.guild.id}`)) {
+  const mentionedMember = message.mentions.members.first();
+  if (mentionedMember) {
+    if (db.has(`afk-${mentionedMember.id}+${message.guild.id}`)) {
       const embed = new Discord.MessageEmbed()
         .setColor("#6495ED")
-        .setDescription(`:zzz: ${message.mentions.members.first()} is AFK: ` + db.get(`afk-${message.mentions.members.first().id}+${message.guild.id}`))
+        .setDescription(`:zzz: ${mentionedMember} is AFK: ` + db.get(`afk-${mentionedMember.id}+${message.guild.id}`))
       message.channel.send(embed)
     } else return;
   }

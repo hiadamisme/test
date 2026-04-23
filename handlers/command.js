@@ -28,8 +28,11 @@ module.exports = (client) => {
       }
 
       const normalizedName = command.name.toLowerCase();
-      if (!command.category) command.category = dir;
-      client.commands.set(normalizedName, command);
+      const commandWithMeta = {
+        ...command,
+        category: command.category || dir
+      };
+      client.commands.set(normalizedName, commandWithMeta);
 
       if (Array.isArray(command.aliases)) {
         for (const alias of command.aliases) {
