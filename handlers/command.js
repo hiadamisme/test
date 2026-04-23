@@ -23,14 +23,16 @@ module.exports = (client) => {
       const command = require(commandPath);
 
       if (!command || typeof command.name !== "string" || typeof command.run !== "function") {
+        console.warn(`Skipping invalid command module: ${dir}/${file}`);
         continue;
       }
 
-      client.commands.set(command.name.toLowerCase(), command);
+      command.name = command.name.toLowerCase();
+      client.commands.set(command.name, command);
 
       if (Array.isArray(command.aliases)) {
         for (const alias of command.aliases) {
-          client.aliases.set(String(alias).toLowerCase(), command.name.toLowerCase());
+          client.aliases.set(String(alias).toLowerCase(), command.name);
         }
       }
     }

@@ -1,4 +1,4 @@
-const { token } = require("./config.json");
+const { token, mongo_uri } = require("./config.json");
 const Discord = require("discord.js");
 require("@haileybot/sanitize-role-mentions")();
 
@@ -79,7 +79,12 @@ const patchSend = (prototype) => {
     return originalSend.call(this, payload, ...rest);
   };
 
-  prototype.startTyping = prototype.startTyping || (() => {});
+  prototype.startTyping = prototype.startTyping || function startTyping() {
+    if (typeof this.sendTyping === "function") {
+      return this.sendTyping().catch(() => {});
+    }
+    return Promise.resolve();
+  };
   prototype.stopTyping = prototype.stopTyping || (() => {});
   prototype.__legacySendPatched = true;
 };
@@ -89,9 +94,14 @@ patchSend(Discord.DMChannel?.prototype);
 patchSend(Discord.ThreadChannel?.prototype);
 
 const mongoose = require("mongoose");
-mongoose.connect("mongo url")
-  .then(() => console.log("connected to mongoose"))
-  .catch((error) => console.error("mongoose connection failed:", error.message));
+const mongoUri = process.env.MONGO_URI || mongo_uri;
+if (mongoUri) {
+  mongoose.connect(mongoUri)
+    .then(() => console.log("connected to mongoose"))
+    .catch((error) => console.error("mongoose connection failed:", error.message));
+} else {
+  console.warn("mongoose connection skipped: no MONGO_URI/mongo_uri configured");
+}
 
 const jointocreate = require("./jointocreate");
 jointocreate(client);

@@ -7,8 +7,6 @@ client.on("messageCreate", async message => {
   if (message.partial) return
   if (message.author.bot) return;
   if (!message.guild) return;
-
-  if (message.author.bot) return;
   if (db.has(`afk-${message.author.id}+${message.guild.id}`)) {
     const info = db.get(`afk-${message.author.id}+${message.guild.id}`)
     await db.delete(`afk-${message.author.id}+${message.guild.id}`)
