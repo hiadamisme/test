@@ -98,9 +98,9 @@ patchSend(Discord.DMChannel?.prototype);
 patchSend(Discord.ThreadChannel?.prototype);
 
 const mongoose = require("mongoose");
-const mongoUri = process.env.MONGO_URI;
-if (mongoUri) {
-  mongoose.connect(mongoUri)
+const mongoURL = process.env.MONGO_URI;
+if (mongoURL) {
+  mongoose.connect(mongoURL)
     .then(() => console.log("connected to mongoose"))
     .catch((error) => console.error("mongoose connection failed:", error.message));
 } else {

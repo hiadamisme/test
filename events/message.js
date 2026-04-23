@@ -19,7 +19,7 @@ client.on("messageCreate", async message => {
       const embed = new Discord.MessageEmbed()
         .setColor("#6495ED")
         .setDescription(`:zzz: ${mentionedMember} is AFK: ` + db.get(`afk-${mentionedMember.id}+${message.guild.id}`))
-      message.channel.send(embed)
+      message.channel.send({ embeds: [embed] })
     } else return;
   }
 })
