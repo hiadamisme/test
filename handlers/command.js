@@ -1,28 +1,45 @@
-const { readdirSync } = require("fs");
-
-const ascii = require("ascii-table");
-
-let table = new ascii("Commands");
-table.setHeading("Command", "Load status");
+const { readdirSync, statSync } = require("fs");
+const path = require("path");
 
 module.exports = (client) => {
+  const root = path.resolve(__dirname, "..");
+  const excludedDirs = new Set([
+    ".git",
+    "events",
+    "handlers",
+    "node_modules"
+  ]);
 
-    readdirSync("./commands/").forEach(dir => {
-        const commands = readdirSync(`./commands/${dir}/`).filter(file => file.endsWith(".js"));
+  const commandDirs = readdirSync(root).filter((entry) => {
+    const fullPath = path.join(root, entry);
+    return statSync(fullPath).isDirectory() && !excludedDirs.has(entry);
+  });
 
-        for (let file of commands) {
-            let pull = require(`../commands/${dir}/${file}`);
+  for (const dir of commandDirs) {
+    const files = readdirSync(path.join(root, dir)).filter(file => file.endsWith(".js"));
 
-            if (pull.name) {
-                client.commands.set(pull.name, pull);
-                table.addRow(file, '✅');
-            } else {
-                table.addRow(file, `❌  -> missing a help.name, or help.name is not a string.`);
-                continue;
-            }
-            if (pull.aliases && Array.isArray(pull.aliases)) pull.aliases.forEach(alias => client.aliases.set(alias, pull.name));
+    for (const file of files) {
+      const commandPath = path.join(root, dir, file);
+      const command = require(commandPath);
+
+      if (!command || typeof command.name !== "string" || typeof command.run !== "function") {
+        console.warn(`Skipping invalid command module: ${dir}/${file}`);
+        continue;
+      }
+
+      const normalizedName = command.name.toLowerCase();
+      const commandWithMeta = {
+        ...command,
+        category: command.category || dir
+      };
+      client.commands.set(normalizedName, commandWithMeta);
+
+      if (Array.isArray(command.aliases)) {
+        for (const alias of command.aliases) {
+          if (typeof alias !== "string") continue;
+          client.aliases.set(String(alias).toLowerCase(), normalizedName);
         }
-    });
-
-    //console.log(table.toString());
-}
+      }
+    }
+  }
+};

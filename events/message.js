@@ -3,29 +3,30 @@ const db = require("quick.db");
 const { default_prefix, color } = require("../config.json");
 const Discord = require('discord.js');
 
-client.on("message", async message => {
+client.on("messageCreate", async message => {
   if (message.partial) return
   if (message.author.bot) return;
-
-  if (message.author.bot) return;
+  if (!message.guild) return;
   if (db.has(`afk-${message.author.id}+${message.guild.id}`)) {
     const info = db.get(`afk-${message.author.id}+${message.guild.id}`)
     await db.delete(`afk-${message.author.id}+${message.guild.id}`)
-    message.channel.send({ embed: { color: "#6495ED", description: `:wave: ${message.author}: Welcome back, you're no longer **AFK**` } });
+    message.channel.send({ embeds: [{ color: 0x6495ED, description: `:wave: ${message.author}: Welcome back, you're no longer **AFK**` }] });
   }
 
-  if (message.mentions.members.first()) {
-    if (db.has(`afk-${message.mentions.members.first().id}+${message.guild.id}`)) {
+  const mentionedMember = message.mentions.members.first();
+  if (mentionedMember) {
+    if (db.has(`afk-${mentionedMember.id}+${message.guild.id}`)) {
       const embed = new Discord.MessageEmbed()
         .setColor("#6495ED")
-        .setDescription(`:zzz: ${message.mentions.members.first()} is AFK: ` + db.get(`afk-${message.mentions.members.first().id}+${message.guild.id}`))
-      message.channel.send(embed)
+        .setDescription(`:zzz: ${mentionedMember} is AFK: ` + db.get(`afk-${mentionedMember.id}+${message.guild.id}`))
+      message.channel.send({ embeds: [embed] })
     } else return;
-  } else;
+  }
 })
 
-client.on("message", async message => {
+client.on("messageCreate", async message => {
   if (message.author.bot) return;
+  if (!message.guild) return;
 
   let prefix2 = db.get(`prefix_${message.guild.id}`)
 
@@ -39,7 +40,6 @@ client.on("message", async message => {
     message.channel.send(prefixEmbed);
   }
 
-  if (!message.guild) return;
   let prefix = db.get(`prefix_${message.guild.id}`);
   if (prefix === null) prefix = default_prefix;
 
@@ -71,7 +71,7 @@ client.on("message", async message => {
 
 })
 
-client.on('message', message => {
+client.on('messageCreate', message => {
   if (message.author.bot) return;
   if (message.content === 'bleed') {
     message.channel.send('what')
