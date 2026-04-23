@@ -1,25 +1,109 @@
-const { token, default_prefix, color } = require("./config.json");
+const { token } = require("./config.json");
 const Discord = require("discord.js");
 require("@haileybot/sanitize-role-mentions")();
+
 const client = new Discord.Client({
-  disableMentions: "everyone",
-  fetchAllMembers: true,
-  partials: ['MESSAGE', 'REACTION']
+  intents: [
+    Discord.GatewayIntentBits.Guilds,
+    Discord.GatewayIntentBits.GuildMembers,
+    Discord.GatewayIntentBits.GuildModeration,
+    Discord.GatewayIntentBits.GuildEmojisAndStickers,
+    Discord.GatewayIntentBits.GuildMessages,
+    Discord.GatewayIntentBits.GuildMessageReactions,
+    Discord.GatewayIntentBits.MessageContent
+  ],
+  partials: [
+    Discord.Partials.Message,
+    Discord.Partials.Channel,
+    Discord.Partials.Reaction,
+    Discord.Partials.GuildMember,
+    Discord.Partials.User
+  ],
+  allowedMentions: { parse: ["users", "roles"] }
 });
-const mongoose = require('mongoose')
-mongoose.connect('mongo url', {
-  useUnifiedTopology: true,
-  useNewUrlParser: true
-}).then(console.log('connected to mongoose'))
+
+const toPermissionFlag = (permission) => {
+  if (typeof permission !== "string") return permission;
+  const normalized = permission.toUpperCase().replace(/\s+/g, "_");
+  const pascal = normalized
+    .toLowerCase()
+    .split("_")
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+  return Discord.PermissionFlagsBits[pascal] || permission;
+};
+
+if (!Discord.MessageEmbed && Discord.EmbedBuilder) {
+  Discord.MessageEmbed = Discord.EmbedBuilder;
+}
+if (!Discord.MessageAttachment && Discord.AttachmentBuilder) {
+  Discord.MessageAttachment = Discord.AttachmentBuilder;
+}
+
+if (Discord.GuildMember?.prototype?.hasPermission == null) {
+  Discord.GuildMember.prototype.hasPermission = function hasPermission(permission) {
+    return this.permissions.has(toPermissionFlag(permission));
+  };
+}
+
+if (Discord.Guild?.prototype && !Object.getOwnPropertyDescriptor(Discord.Guild.prototype, "me")) {
+  Object.defineProperty(Discord.Guild.prototype, "me", {
+    get() {
+      return this.members?.me || null;
+    }
+  });
+}
+
+const normalizeEmbed = (embed) => {
+  if (!embed) return embed;
+  if (embed instanceof Discord.EmbedBuilder) return embed;
+  return new Discord.EmbedBuilder(embed);
+};
+
+const patchSend = (prototype) => {
+  if (!prototype || prototype.__legacySendPatched) return;
+  const originalSend = prototype.send;
+  if (typeof originalSend !== "function") return;
+
+  prototype.send = function patchedSend(payload, ...rest) {
+    if (payload instanceof Discord.EmbedBuilder) {
+      return originalSend.call(this, { embeds: [payload] }, ...rest);
+    }
+
+    if (payload && typeof payload === "object" && !Array.isArray(payload) && payload.embed) {
+      const nextPayload = { ...payload, embeds: [normalizeEmbed(payload.embed)] };
+      delete nextPayload.embed;
+      return originalSend.call(this, nextPayload, ...rest);
+    }
+
+    return originalSend.call(this, payload, ...rest);
+  };
+
+  prototype.startTyping = prototype.startTyping || (() => {});
+  prototype.stopTyping = prototype.stopTyping || (() => {});
+  prototype.__legacySendPatched = true;
+};
+
+patchSend(Discord.BaseGuildTextChannel?.prototype);
+patchSend(Discord.DMChannel?.prototype);
+patchSend(Discord.ThreadChannel?.prototype);
+
+const mongoose = require("mongoose");
+mongoose.connect("mongo url")
+  .then(() => console.log("connected to mongoose"))
+  .catch((error) => console.error("mongoose connection failed:", error.message));
+
 const jointocreate = require("./jointocreate");
 jointocreate(client);
+
 client.commands = new Discord.Collection();
 client.aliases = new Discord.Collection();
 client.db = require("quick.db");
+
 module.exports = client;
+
 ["command", "event"].forEach(handler => {
   require(`./handlers/${handler}`)(client);
 });
-Discord.Constants.DefaultOptions.ws.properties.$browser = "Discord Android"
 
-client.login(token)
+client.login(token);

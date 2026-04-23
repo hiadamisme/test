@@ -3,9 +3,10 @@ const db = require("quick.db");
 const { default_prefix, color } = require("../config.json");
 const Discord = require('discord.js');
 
-client.on("message", async message => {
+client.on("messageCreate", async message => {
   if (message.partial) return
   if (message.author.bot) return;
+  if (!message.guild) return;
 
   if (message.author.bot) return;
   if (db.has(`afk-${message.author.id}+${message.guild.id}`)) {
@@ -24,8 +25,9 @@ client.on("message", async message => {
   } else;
 })
 
-client.on("message", async message => {
+client.on("messageCreate", async message => {
   if (message.author.bot) return;
+  if (!message.guild) return;
 
   let prefix2 = db.get(`prefix_${message.guild.id}`)
 
@@ -39,7 +41,6 @@ client.on("message", async message => {
     message.channel.send(prefixEmbed);
   }
 
-  if (!message.guild) return;
   let prefix = db.get(`prefix_${message.guild.id}`);
   if (prefix === null) prefix = default_prefix;
 
@@ -71,7 +72,7 @@ client.on("message", async message => {
 
 })
 
-client.on('message', message => {
+client.on('messageCreate', message => {
   if (message.author.bot) return;
   if (message.content === 'bleed') {
     message.channel.send('what')
